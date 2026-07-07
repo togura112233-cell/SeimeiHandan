@@ -1,0 +1,440 @@
+/* 姓名判断 〜五格剖象法〜 */
+:root {
+  --washi: #f6f1e6;
+  --washi-deep: #efe7d6;
+  --ink: #2b2a28;
+  --ink-soft: #55524c;
+  --vermilion: #b3392e;
+  --gold: #a8842c;
+  --border: #d9cfba;
+  --daikichi: #b3392e;
+  --kichi: #b57724;
+  --hankichi: #6f7a3a;
+  --kyou: #4a6478;
+  --daikyou: #3a3a52;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { font-size: 17px; }
+
+body {
+  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(179, 57, 46, 0.05), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(168, 132, 44, 0.06), transparent 45%),
+    var(--washi);
+  color: var(--ink);
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+  min-height: 100vh;
+}
+
+.hidden { display: none !important; }
+
+/* ---------- ヘッダー ---------- */
+.site-header {
+  padding: 3.2rem 1rem 2.4rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.5), transparent);
+}
+.header-sub {
+  font-size: 0.95rem;
+  color: var(--vermilion);
+  letter-spacing: 0.35em;
+  margin-bottom: 0.4rem;
+}
+.header-title {
+  font-family: "Yuji Syuku", "Zen Old Mincho", "Hiragino Mincho ProN", serif;
+  font-size: clamp(2.6rem, 7vw, 3.8rem);
+  letter-spacing: 0.18em;
+  font-weight: 400;
+}
+.header-desc {
+  margin-top: 0.7rem;
+  color: var(--ink-soft);
+  font-size: 1rem;
+}
+
+/* ---------- レイアウト ---------- */
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.2rem 4rem;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.8rem;
+  box-shadow: 0 2px 14px rgba(90, 70, 40, 0.06);
+}
+
+.stage { margin-top: 2.6rem; }
+.stage-title {
+  font-family: "Zen Old Mincho", serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.22em;
+  text-align: center;
+  color: var(--ink);
+  margin-bottom: 1.4rem;
+  position: relative;
+}
+.stage-title::after {
+  content: "";
+  display: block;
+  width: 46px; height: 2px;
+  background: var(--vermilion);
+  margin: 0.55rem auto 0;
+  border-radius: 2px;
+}
+
+/* ---------- 入力 ---------- */
+.input-card { margin-top: 1rem; }
+.name-inputs {
+  display: flex; gap: 1.2rem; flex-wrap: wrap;
+}
+.name-field { flex: 1; min-width: 220px; }
+.name-field label {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+}
+.name-field input {
+  width: 100%;
+  font-size: 1.6rem;
+  font-family: "Zen Old Mincho", serif;
+  letter-spacing: 0.2em;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: #fffdf8;
+  color: var(--ink);
+  transition: border-color 0.2s;
+}
+.name-field input:focus {
+  outline: none;
+  border-color: var(--vermilion);
+}
+
+.mode-select {
+  margin-top: 1.4rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.mode-label { font-size: 0.95rem; color: var(--ink-soft); }
+.mode-option {
+  display: flex; align-items: baseline; gap: 0.6rem;
+  cursor: pointer; font-size: 1.02rem;
+}
+.mode-option small { color: var(--ink-soft); font-size: 0.85rem; margin-left: 0.4rem; }
+.mode-option input { transform: translateY(2px); accent-color: var(--vermilion); }
+
+.primary-btn {
+  display: block;
+  width: 100%;
+  margin-top: 1.6rem;
+  padding: 1rem 1.4rem;
+  font-size: 1.2rem;
+  font-family: "Zen Old Mincho", serif;
+  letter-spacing: 0.3em;
+  color: #fffdf8;
+  background: linear-gradient(135deg, #c04a3e, var(--vermilion));
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(179, 57, 46, 0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(179, 57, 46, 0.4); }
+.primary-btn:active { transform: translateY(0); }
+.input-error { color: var(--vermilion); margin-top: 0.8rem; text-align: center; min-height: 1.5em; }
+
+/* ---------- 筆順アニメーション ---------- */
+.stroke-row {
+  display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;
+}
+.stroke-cell {
+  width: 128px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+.stroke-cell.on { opacity: 1; transform: translateY(0); }
+.stroke-box {
+  width: 128px; height: 128px;
+  background: #fffdf8;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.stroke-box svg { width: 100%; height: 100%; }
+.stroke-box svg path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.stroke-box .plain-char {
+  font-family: "Yuji Syuku", serif;
+  font-size: 84px;
+  line-height: 128px;
+}
+.stroke-count {
+  margin-top: 0.45rem;
+  font-family: "Zen Old Mincho", serif;
+  font-size: 1.25rem;
+}
+.stroke-count .num { font-size: 1.6rem; color: var(--vermilion); font-weight: 600; }
+.stroke-note {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-top: 0.2rem;
+  min-height: 1.2em;
+}
+.stroke-note .adj { color: var(--gold); font-weight: 700; }
+.stroke-cell .orig-char {
+  font-size: 0.82rem; color: var(--ink-soft);
+}
+
+/* ---------- 五格図 ---------- */
+.diagram {
+  display: flex;
+  justify-content: center;
+}
+.diagram-grid {
+  display: grid;
+  grid-template-columns: 90px 120px 90px;
+  gap: 0.4rem 1.2rem;
+  align-items: center;
+}
+.dg-char {
+  background: #fffdf8;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: "Yuji Syuku", serif;
+  font-size: 2.2rem;
+  text-align: center;
+  padding: 0.25rem 0;
+  position: relative;
+}
+.dg-char .dg-n {
+  position: absolute; right: 6px; bottom: 2px;
+  font-family: "Zen Old Mincho", serif;
+  font-size: 0.85rem; color: var(--ink-soft);
+}
+.dg-char.dg-rei { color: var(--ink-soft); font-size: 1rem; font-family: "Zen Maru Gothic", sans-serif; padding: 0.9rem 0; }
+.kaku-badge {
+  opacity: 0; transform: scale(0.6);
+  transition: opacity 0.45s, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: #fffdf8;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  padding: 0.35rem 0.3rem;
+  line-height: 1.5;
+}
+.kaku-badge.on { opacity: 1; transform: scale(1); }
+.kaku-badge .kb-label { font-size: 0.82rem; color: var(--ink-soft); display: block; }
+.kaku-badge .kb-num {
+  font-family: "Zen Old Mincho", serif;
+  font-size: 1.5rem; font-weight: 700;
+}
+.kaku-badge .kb-rank { font-size: 0.9rem; font-weight: 700; display: block; }
+.dg-span { grid-column: 1 / -1; }
+
+/* ---------- 結果カード ---------- */
+.kaku-cards { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+.kaku-card {
+  display: flex; gap: 1.2rem; align-items: flex-start;
+  opacity: 0; transform: translateY(16px);
+  transition: opacity 0.55s, transform 0.55s;
+}
+.kaku-card.on { opacity: 1; transform: translateY(0); }
+.kaku-card .kc-left {
+  flex: 0 0 118px;
+  text-align: center;
+  border-right: 1px dashed var(--border);
+  padding-right: 1rem;
+}
+.kc-left .kc-kaku {
+  font-family: "Zen Old Mincho", serif;
+  font-size: 1.25rem; letter-spacing: 0.15em;
+}
+.kc-left .kc-num {
+  font-family: "Zen Old Mincho", serif;
+  font-size: 2.3rem; font-weight: 700; line-height: 1.3;
+}
+.kc-left .kc-num small { font-size: 1rem; font-weight: 400; }
+.kc-rank {
+  display: inline-block;
+  padding: 0.1rem 0.8rem;
+  border-radius: 999px;
+  color: #fffdf8;
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+}
+.rank-daikichi { background: var(--daikichi); }
+.rank-kichi    { background: var(--kichi); }
+.rank-hankichi { background: var(--hankichi); }
+.rank-kyou     { background: var(--kyou); }
+.rank-daikyou  { background: var(--daikyou); }
+.rank-none     { background: #999; }
+.kc-body { flex: 1; }
+.kc-body .kc-name {
+  font-family: "Zen Old Mincho", serif;
+  font-size: 1.2rem; font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+.kc-body .kc-text { font-size: 1rem; }
+.kc-body .kc-desc { font-size: 0.85rem; color: var(--ink-soft); margin-top: 0.5rem; line-height: 1.7; }
+
+.extra-cards { display: grid; gap: 1rem; grid-template-columns: 1fr; margin-top: 1rem; }
+@media (min-width: 720px) { .extra-cards { grid-template-columns: 1fr 1fr; } }
+.extra-card h3 {
+  font-family: "Zen Old Mincho", serif;
+  font-size: 1.15rem; letter-spacing: 0.15em;
+  margin-bottom: 0.7rem;
+}
+.gogyou-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+.gogyou-ball {
+  width: 54px; height: 54px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: "Zen Old Mincho", serif; font-size: 1.4rem;
+  color: #fffdf8;
+  flex-direction: column; line-height: 1.2;
+}
+.gogyou-ball small { font-size: 0.62rem; letter-spacing: 0; }
+.g-木 { background: #4a7c45; } .g-火 { background: #b3392e; }
+.g-土 { background: #a8842c; } .g-金 { background: #8a8f98; }
+.g-水 { background: #34586e; }
+.gogyou-rel { color: var(--ink-soft); font-size: 0.95rem; }
+.inyou-row {
+  font-size: 1.9rem; letter-spacing: 0.4em;
+  font-family: "Zen Old Mincho", serif;
+  margin-bottom: 0.5rem;
+}
+.extra-rank { font-weight: 700; margin-right: 0.5rem; }
+.disclaimer {
+  margin-top: 1.4rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+
+.shikishi-cta { margin-top: 2rem; text-align: center; }
+.brush-btn {
+  max-width: 460px; margin-left: auto; margin-right: auto;
+  background: linear-gradient(135deg, #3c3a36, #23221f);
+  box-shadow: 0 4px 14px rgba(30, 25, 15, 0.35);
+}
+.brush-btn:hover { box-shadow: 0 6px 20px rgba(30, 25, 15, 0.45); }
+
+/* ---------- 色紙（静の演出） ---------- */
+#shikishiStage {
+  animation: quietIn 1.6s ease both;
+}
+@keyframes quietIn { from { opacity: 0; } to { opacity: 1; } }
+
+.talk-card { margin-bottom: 2rem; }
+.talk-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
+.talk-badge {
+  background: var(--vermilion); color: #fffdf8;
+  font-size: 0.85rem; padding: 0.15rem 0.8rem; border-radius: 999px;
+  letter-spacing: 0.2em;
+}
+.talk-name { font-family: "Zen Old Mincho", serif; font-size: 1.1rem; }
+.talk-body { white-space: pre-wrap; font-size: 1.02rem; }
+
+.shikishi-wrap {
+  display: flex; justify-content: center;
+  padding: 1.5rem 0 0.5rem;
+}
+.shikishi {
+  width: min(420px, 88vw);
+  aspect-ratio: 0.92;
+  background:
+    linear-gradient(160deg, rgba(255,255,255,0.65), rgba(255,255,255,0) 55%),
+    #fbf6ea;
+  border: 1px solid #e2d7bf;
+  outline: 10px solid #f3ecd9;
+  outline-offset: -1px;
+  box-shadow: 0 10px 34px rgba(60, 45, 20, 0.22);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.shikishi-poem {
+  writing-mode: vertical-rl;
+  font-family: "Yuji Syuku", "Zen Old Mincho", serif;
+  font-size: clamp(2rem, 6.4vw, 2.8rem);
+  letter-spacing: 0.28em;
+  line-height: 1.7;
+  max-height: 86%;
+  color: #1e1c19;
+}
+.shikishi-poem span {
+  opacity: 0;
+  filter: blur(3px);
+  transition: opacity 0.7s ease, filter 0.7s ease;
+}
+.shikishi-poem span.on { opacity: 1; filter: blur(0); }
+.shikishi-sign {
+  position: absolute;
+  right: 22px; bottom: 20px;
+  width: 34px; height: 34px;
+  border: 2px solid var(--vermilion);
+  color: var(--vermilion);
+  border-radius: 6px;
+  font-family: "Yuji Syuku", serif;
+  font-size: 1.3rem;
+  display: flex; align-items: center; justify-content: center;
+  transform: rotate(-4deg);
+  opacity: 0;
+  transition: opacity 0.8s ease 0.3s;
+}
+.shikishi-sign.on { opacity: 0.92; }
+
+.shikishi-actions {
+  display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap;
+  margin-top: 1.8rem;
+}
+.ghost-btn {
+  padding: 0.65rem 1.3rem;
+  font-size: 0.98rem;
+  font-family: "Zen Maru Gothic", sans-serif;
+  color: var(--ink);
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ghost-btn:hover { border-color: var(--vermilion); background: rgba(179, 57, 46, 0.05); }
+.ghost-btn:disabled { opacity: 0.5; cursor: wait; }
+
+.ai-result { margin-top: 1.6rem; white-space: pre-wrap; font-size: 1.02rem; }
+
+/* ---------- フッター ---------- */
+.site-footer {
+  text-align: center;
+  padding: 1.6rem 1rem 2.2rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--border);
+}
+.site-footer a { color: var(--ink-soft); }
+
+@media (max-width: 560px) {
+  html { font-size: 16px; }
+  .card { padding: 1.2rem; }
+  .kaku-card { flex-direction: column; gap: 0.6rem; }
+  .kaku-card .kc-left { border-right: none; border-bottom: 1px dashed var(--border); padding: 0 0 0.6rem; flex-basis: auto; width: 100%; }
+  .diagram-grid { grid-template-columns: 70px 96px 70px; }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "seimeihandan",
+  "version": "1.0.0",
+  "description": "姓名判断 〜五格剖象法（熊崎式）〜 筆順アニメーション付きWebツール",
+  "main": "bin/cli.js",
+  "scripts": {
+    "start": "node bin/cli.js"
+  },
+  "license": "MIT",
+  "private": true
+}

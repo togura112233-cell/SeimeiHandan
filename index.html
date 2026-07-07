@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>姓名判断 〜五格剖象法〜</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Old+Mincho:wght@400;600;900&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <p class="header-sub">熊崎式・五格剖象法</p>
+      <h1 class="header-title">姓名判断</h1>
+      <p class="header-desc">名前の画数が、あなたの物語を教えてくれる。</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 入力 -->
+    <section class="card input-card" id="inputCard">
+      <div class="name-inputs">
+        <div class="name-field">
+          <label for="seiInput">姓（みょうじ）</label>
+          <input type="text" id="seiInput" placeholder="山田" autocomplete="off">
+        </div>
+        <div class="name-field">
+          <label for="meiInput">名（なまえ）</label>
+          <input type="text" id="meiInput" placeholder="太郎" autocomplete="off">
+        </div>
+      </div>
+      <div class="mode-select">
+        <span class="mode-label">画数の数え方</span>
+        <label class="mode-option">
+          <input type="radio" name="mode" value="kyu" checked>
+          <span>旧字体・伝統画数<small>（熊崎式の本流。さんずい＝水4画 など）</small></span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="mode" value="shin">
+          <span>新字体・実画数<small>（普段書いている字の画数どおり）</small></span>
+        </label>
+      </div>
+      <button class="primary-btn" id="startBtn">鑑定する</button>
+      <p class="input-error" id="inputError"></p>
+    </section>
+
+    <!-- 筆順アニメーション -->
+    <section class="stage hidden" id="strokeStage">
+      <h2 class="stage-title">画数を数える</h2>
+      <div class="stroke-row" id="strokeRow"></div>
+    </section>
+
+    <!-- 五格図 -->
+    <section class="stage hidden" id="diagramStage">
+      <h2 class="stage-title">五格を組む</h2>
+      <div class="diagram" id="diagram"></div>
+    </section>
+
+    <!-- 結果カード -->
+    <section class="stage hidden" id="resultStage">
+      <h2 class="stage-title">鑑定結果</h2>
+      <div class="kaku-cards" id="kakuCards"></div>
+      <div class="extra-cards">
+        <div class="card extra-card" id="sansaiCard"></div>
+        <div class="card extra-card" id="inyouCard"></div>
+      </div>
+      <p class="disclaimer">※ 画数の数え方（旧字体・部首・かな）は流派により異なります。本ツールは熊崎式で広く用いられる基準を採用し、補正の内訳をすべて表示しています。</p>
+      <div class="shikishi-cta">
+        <button class="primary-btn brush-btn" id="poemBtn">色紙に一行、言葉をもらう</button>
+      </div>
+    </section>
+
+    <!-- 色紙（静の演出） -->
+    <section class="stage hidden" id="shikishiStage">
+      <div class="talk-card card" id="talkCard">
+        <div class="talk-header">
+          <span class="talk-badge">鑑定トーク</span>
+          <span class="talk-name" id="talkName"></span>
+        </div>
+        <div class="talk-body" id="talkBody"></div>
+      </div>
+      <div class="shikishi-wrap" id="shikishiWrap">
+        <div class="shikishi">
+          <div class="shikishi-poem" id="shikishiPoem"></div>
+          <div class="shikishi-sign">心</div>
+        </div>
+      </div>
+      <div class="shikishi-actions">
+        <button class="ghost-btn" id="rerollBtn">もう一度詠んでもらう</button>
+        <button class="ghost-btn" id="aiBtn">AIにじっくり鑑定してもらう（Codex）</button>
+        <button class="ghost-btn" id="resetBtn">はじめから</button>
+      </div>
+      <div class="ai-result card hidden" id="aiResult"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>筆順データ: <a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener">KanjiVG</a>（CC BY-SA 3.0）／ 画数辞書: KANJIDIC2（EDRDG）</p>
+  </footer>
+
+  <script src="js/data/strokes.js"></script>
+  <script src="js/data/kana.js"></script>
+  <script src="js/data/kyujitai.js"></script>
+  <script src="js/data/adjust.js"></script>
+  <script src="js/data/kanjivg.js"></script>
+  <script src="js/gokaku.js"></script>
+  <script src="js/meanings.js"></script>
+  <script src="js/poem.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
