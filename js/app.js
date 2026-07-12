@@ -8,27 +8,77 @@
   let current = null; // { result, meta }
   let poemOffset = 0;
   let running = false;
+  let aiText = null; // Codex鑑定文（取得済みならレポートに載せる）
 
   /* ============ 入力 ============ */
+  let variantChoices = {}; // 入力された字 → 本人が選んだ字体（例: '高' → '髙'）
+
   $('startBtn').addEventListener('click', () => { run().catch(console.error); });
   ['seiInput', 'meiInput'].forEach((id) => {
     $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') run().catch(console.error); });
+    $(id).addEventListener('input', () => {
+      variantChoices = {};
+      $('variantPanel').classList.add('hidden');
+    });
   });
 
   function splitChars(s) {
     return [...s.replace(/[\s　]/g, '')];
   }
 
+  /* 異体字の確認パネル: 戸籍の字がどちらかを本人に選んでもらう */
+  function askVariants(pending) {
+    const panel = $('variantPanel');
+    panel.innerHTML = `
+      <p class="variant-title">字体の確認</p>
+      <p class="variant-desc">同じ読みで字体が複数ある漢字が含まれています。戸籍・普段お使いの字を選んでください（画数が変わります）。</p>`;
+    for (const ch of pending) {
+      const row = document.createElement('div');
+      row.className = 'variant-row';
+      row.innerHTML = window.ITAIJI[ch].map(([v, label], i) => `
+        <label class="variant-option">
+          <input type="radio" name="variant-${ch}" value="${v}" ${i === 0 ? 'checked' : ''}>
+          <span class="variant-glyph">${v}</span>
+          <span class="variant-label">${label}・${window.STROKES[v]}画</span>
+        </label>`).join('');
+      panel.appendChild(row);
+    }
+    const btn = document.createElement('button');
+    btn.className = 'primary-btn variant-btn';
+    btn.textContent = 'この字で鑑定する';
+    btn.addEventListener('click', () => {
+      for (const ch of pending) {
+        variantChoices[ch] = panel.querySelector(`input[name="variant-${ch}"]:checked`).value;
+      }
+      panel.classList.add('hidden');
+      run().catch(console.error);
+    });
+    panel.appendChild(btn);
+    panel.classList.remove('hidden');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
   async function run() {
     if (running) return;
-    const seiChars = splitChars($('seiInput').value);
-    const meiChars = splitChars($('meiInput').value);
+    let seiChars = splitChars($('seiInput').value);
+    let meiChars = splitChars($('meiInput').value);
     const err = $('inputError');
     err.textContent = '';
     if (!seiChars.length || !meiChars.length) {
       err.textContent = '姓と名を両方入れてください。';
       return;
     }
+
+    // 異体字（髙/高 など）が含まれていて未確認なら、先に字体を選んでもらう
+    const pending = [...new Set([...seiChars, ...meiChars])]
+      .filter((ch) => window.ITAIJI[ch] && !(ch in variantChoices));
+    if (pending.length) {
+      askVariants(pending);
+      return;
+    }
+    seiChars = seiChars.map((ch) => variantChoices[ch] || ch);
+    meiChars = meiChars.map((ch) => variantChoices[ch] || ch);
+
     const mode = document.querySelector('input[name="mode"]:checked').value;
     const result = window.Gokaku.computeGokaku(seiChars, meiChars, mode);
 
@@ -55,6 +105,7 @@
     $('diagram').innerHTML = '';
     $('kakuCards').innerHTML = '';
     $('aiResult').classList.add('hidden');
+    aiText = null;
 
     try {
       await animateStrokes(result);
@@ -377,12 +428,128 @@
         body: JSON.stringify({ prompt }),
       });
       const data = await res.json();
-      if (data.text) out.textContent = data.text;
+      if (data.text) { out.textContent = data.text; aiText = data.text; }
       else out.textContent = (data.error || 'AI鑑定を取得できませんでした。') + '\n※ この機能は `node bin/cli.js` で起動したときだけ使えます（Codexサブスク経由）。上のオフライン鑑定はいつでも動きます。';
     } catch (e) {
       out.textContent = 'AI鑑定はローカルサーバ経由でのみ利用できます。`node bin/cli.js` で起動してください。（オフライン鑑定はこのまま使えます）';
     } finally {
       btn.disabled = false;
     }
+  }
+
+  /* ============ 6. A4 PDFレポート ============ */
+  ['pdfBtn', 'pdfBtnResult'].forEach((id) => {
+    $(id).addEventListener('click', () => { printReport(); });
+  });
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
+  function printReport() {
+    if (!current) return;
+    const { result, meta } = current;
+    const { kaku } = result;
+
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+    const modeLabel = result.mode === 'kyu' ? '旧字体・伝統画数（熊崎式）' : '新字体・実画数';
+
+    // 文字と画数
+    const charRows = [...result.sei, ...result.mei].map((c) => `
+      <div class="pr-char">
+        <div class="pr-char-glyph">${esc(c.display)}</div>
+        <div class="pr-char-n">${c.n}画</div>
+        ${c.display !== c.ch ? `<div class="pr-char-note">「${esc(c.ch)}」の旧字体</div>` : ''}
+        ${c.notes.length ? `<div class="pr-char-note">${esc(c.notes.join('・'))}</div>` : ''}
+      </div>`).join('');
+
+    // 五格
+    const order = ['jinkaku', 'chikaku', 'gaikaku', 'soukaku', 'tenkaku'];
+    const kakuRows = order.map((key) => {
+      const n = kaku[key];
+      const reduced = window.Gokaku.reduce81(n);
+      const s = window.SUJI[reduced];
+      const info = window.KAKU_INFO[key];
+      const numLabel = reduced === n ? `${n}画` : `${n}画→${reduced}`;
+      return `
+        <tr>
+          <th>${esc(info.label)}</th>
+          <td class="pr-num">${numLabel}</td>
+          <td class="pr-suji">「${esc(s.name)}」</td>
+          <td class="pr-rank ${window.rankClass(s.rank)}">${esc(s.rank)}</td>
+          <td class="pr-text">${esc(s.text)}<span class="pr-desc">${esc(info.desc)}</span></td>
+        </tr>`;
+    }).join('');
+
+    const ss = window.Gokaku.sansai(kaku);
+    const iy = window.Gokaku.inyouArray(result.sei, result.mei);
+
+    // トークと一行詩（色紙をまだ出していなくても同じシードで再現できる）
+    const talkMeta = { ...meta, offset: poemOffset };
+    const talk = window.Shinnosuke.buildTalk(result, talkMeta);
+    const poem = window.Shinnosuke.buildPoem(result, talkMeta);
+
+    const talkHtml = talk.split('\n\n').map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+    const aiHtml = aiText
+      ? `<section class="pr-section pr-break">
+           <h2>AIじっくり鑑定（Codex）</h2>
+           <div class="pr-talk">${aiText.split(/\n{2,}/).map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
+         </section>`
+      : '';
+
+    $('printReport').innerHTML = `
+      <header class="pr-header">
+        <p class="pr-sub">熊崎式・五格剖象法　姓名判断レポート</p>
+        <h1 class="pr-name">${esc(meta.fullName)}</h1>
+        <p class="pr-meta">鑑定日: ${dateStr}　／　画数の数え方: ${esc(modeLabel)}</p>
+      </header>
+
+      <section class="pr-section">
+        <h2>文字と画数</h2>
+        <div class="pr-chars">${charRows}</div>
+      </section>
+
+      <section class="pr-section">
+        <h2>五格の鑑定</h2>
+        <table class="pr-table">${kakuRows}</table>
+      </section>
+
+      <section class="pr-section pr-two-col">
+        <div>
+          <h2>三才配置（五行）</h2>
+          <p class="pr-inline"><strong>天${ss.ten}・人${ss.jin}・地${ss.chi}</strong>（${ss.r1}／${ss.r2}）
+            <span class="pr-rank-inline">${esc(ss.rank)}</span></p>
+          <p>${esc(ss.text)}</p>
+        </div>
+        <div>
+          <h2>陰陽配列</h2>
+          <p class="pr-inline"><strong class="pr-inyou">${iy.arr.join('')}</strong>
+            <span class="pr-rank-inline">${esc(iy.rank)}</span></p>
+          <p>${esc(iy.text)}（奇数画＝陽○、偶数画＝陰●）</p>
+        </div>
+      </section>
+
+      <section class="pr-section">
+        <h2>鑑定トーク</h2>
+        <div class="pr-talk">${talkHtml}</div>
+      </section>
+
+      <section class="pr-section pr-shikishi-sec">
+        <h2>あなたへの一行</h2>
+        <div class="pr-shikishi">
+          <span class="pr-poem">${esc(poem)}</span>
+          <span class="pr-sign">${esc(meta.meiChars[0] || '福')}</span>
+        </div>
+      </section>
+
+      ${aiHtml}
+
+      <footer class="pr-footer">
+        <p>※ 画数の数え方（旧字体・部首・かな）は流派により異なります。本レポートは熊崎式で広く用いられる基準を採用しています。</p>
+        <p>姓名判断 〜五格剖象法〜　／　筆順データ: KanjiVG（CC BY-SA 3.0）・画数辞書: KANJIDIC2（EDRDG）</p>
+      </footer>`;
+
+    window.print();
   }
 })();

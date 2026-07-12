@@ -42,6 +42,7 @@
           <span>新字体・実画数<small>（普段書いている字の画数どおり）</small></span>
         </label>
       </div>
+      <div class="variant-panel hidden" id="variantPanel"></div>
       <button class="primary-btn" id="startBtn">鑑定する</button>
       <p class="input-error" id="inputError"></p>
     </section>
@@ -69,6 +70,7 @@
       <p class="disclaimer">※ 画数の数え方（旧字体・部首・かな）は流派により異なります。本ツールは熊崎式で広く用いられる基準を採用し、補正の内訳をすべて表示しています。</p>
       <div class="shikishi-cta">
         <button class="primary-btn brush-btn" id="poemBtn">色紙に一行、言葉をもらう</button>
+        <button class="ghost-btn" id="pdfBtnResult">A4レポート（PDF）を出す</button>
       </div>
     </section>
 
@@ -90,17 +92,22 @@
       <div class="shikishi-actions">
         <button class="ghost-btn" id="rerollBtn">もう一度詠んでもらう</button>
         <button class="ghost-btn" id="aiBtn">AIにじっくり鑑定してもらう（Codex）</button>
+        <button class="ghost-btn" id="pdfBtn">A4レポート（PDF）を出す</button>
         <button class="ghost-btn" id="resetBtn">はじめから</button>
       </div>
       <div class="ai-result card hidden" id="aiResult"></div>
     </section>
   </main>
 
+  <!-- A4 PDFレポート（印刷時のみ表示） -->
+  <div class="print-report" id="printReport" aria-hidden="true"></div>
+
   <footer class="site-footer">
     <p>筆順データ: <a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener">KanjiVG</a>（CC BY-SA 3.0）／ 画数辞書: KANJIDIC2（EDRDG）</p>
   </footer>
 
   <script src="js/data/strokes.js"></script>
+  <script src="js/data/itaiji.js"></script>
   <script src="js/data/kana.js"></script>
   <script src="js/data/kyujitai.js"></script>
   <script src="js/data/adjust.js"></script>
