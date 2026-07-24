@@ -1,6 +1,6 @@
 # 姓名判断アプリ Webアプリ化 実装プラン
 
-> バージョン: v2 | 作成日: 2026-07-24 | 更新日: 2026-07-25 | ステータス: 承認済み・実装中
+> バージョン: v3 | 作成日: 2026-07-24 | 更新日: 2026-07-25 | ステータス: 完了（Step1〜6すべて完了、本番公開済み）
 
 ---
 
@@ -62,12 +62,12 @@
 - [x] Step 2: `js/poem.js`・`js/meanings.js`・README.md内の「心之介。」関連の記述を「筆聖 墨伝」に置き換え（カイハツ君）
 - [x] Step 3: `index.html`・`js/app.js`からAI鑑定ボタン（`/api/reading`呼び出し部分）を非表示化・除去（`bin/cli.js`はローカル起動用として残置）（カイハツ君）
 - [x] Step 4: KanjiVG（CC BY-SA 3.0, © Ulrich Apel）・KANJIDIC2（EDRDG）のクレジットをフッター等の画面上に表示追加（カイハツ君）
-- [ ] Step 5: 静的サイトとしてローカル動作確認（ダブルクリック/簡易サーバ）→ Vercelへデプロイ（デジまる君）
-- [ ] Step 6: 本番URLで動作確認（五格計算・筆順アニメ・新キャラ鑑定トーク・クレジット表示）
+- [x] Step 5: 静的サイトとしてローカル動作確認（ダブルクリック/簡易サーバ）→ Vercelへデプロイ（デジまる君）→ 完了（2026-07-25、リポジトリ移行の経緯は下記「実装後メモ」参照）
+- [x] Step 6: 本番URLで動作確認（五格計算・筆順アニメ・新キャラ鑑定トーク・クレジット表示）→ 完了（2026-07-25、詳細は下記「実装後メモ」参照）
 
 ## 見積もり時間
 - 見積もり: 2〜3時間（キャラクター確定の往復含む）
-- 実際にかかった時間: Step2〜4は約1時間（詳細は「実装後メモ」参照）。Step5〜6は未着手。
+- 実際にかかった時間: Step2〜4は約1時間・Step5〜6は権限トラブル対応込みで約1時間（詳細は「実装後メモ」参照）。
 
 ## 完了条件
 - 本番URLで名前を入力→五格計算・筆順アニメ・新キャラクターの鑑定トークが表示される（正常系）
@@ -103,6 +103,7 @@
 |---|---|---|
 | v1 | 初稿作成 | AI鑑定保留・心之介ペルソナ差し替え・決済なしの3方針をタカシさんに確認済み |
 | v2 | 新キャラクター「筆聖 墨伝」を確定・Step1完了・タカシさんGO受領 | 実装フェーズへ移行 |
+| v3 | Step5でGitHubリポジトリを`Getabako/SeimeiHandan`から`togura112233-cell/SeimeiHandan`に変更・Step5〜6完了 | `Getabako/SeimeiHandan`へのpush権限がないことが判明したため、タカシさん確認の上、push権限のある`togura112233-cell`アカウント配下に新規リポジトリを作成する方針に変更 |
 
 ---
 
@@ -121,4 +122,22 @@
   - 鑑定トークの定型文（`core`/`wakage`/`shakai`/`bannen`）は毎回必ず出力される部分であり、旧キャラの「！」「やな」「そんで」といった快活な関西弁が濃く残っていたため、新キャラの「穏やかな標準語＋時々関西弁」というトーン指定に合わせて明るさを少し落とした（`JIN_TALK`等のセリフバンクは指示範囲内で全面的に書き換え済み）。
 - 未実施・要確認事項:
   - README.mdの「AI鑑定」機能説明は削除し、`bin/cli.js`の説明も「現在UIから未使用」と明記したが、bin/cli.js自体のコード（`/api/reading`実装）は変更していない。将来再度AI鑑定機能を有効化する場合は別途plan.mdが必要（既存の「懸念点・要確認」欄を参照）。
-  - Step5（Vercelデプロイ）・Step6（本番確認）はデジまる君の担当範囲のため未着手。
+
+**Step5〜6 実装完了（2026-07-25、デジまる君）**
+
+- **リポジトリ移行の経緯**: `git push origin main`実行時、現在GitHub CLIで認証中のアカウント`togura112233-cell`が`Getabako/SeimeiHandan`への書き込み権限を持たない（403 Permission denied。`gh api repos/Getabako/SeimeiHandan`で確認したところ`"push": false, "pull": true`）ことが判明。一度作業を停止しタカシさんに確認した結果、「`togura112233-cell`アカウント配下に新規リポジトリを作成し、そちらにpush・Vercelデプロイする。`Getabako/SeimeiHandan`は読み取り専用のまま触らない」方針を確定。
+  - 新リポジトリ: **https://github.com/togura112233-cell/SeimeiHandan**（public）
+  - ローカルのgit remoteは`origin`（`Getabako/SeimeiHandan`、読み取り専用のまま維持）と`vercel-origin`（`togura112233-cell/SeimeiHandan`、push・Vercel連携用）の2本立てに変更
+  - push時、ローカルリポジトリが`Getabako/SeimeiHandan`からのshallow clone（`.git/shallow`あり）だったため、そのままでは新リポジトリへのpushが`did not receive expected object`エラーで失敗。`git fetch --unshallow origin`で解消（origin自体への書き込みは発生しないため権限問題には抵触しない）。
+- **Vercelデプロイ**: Vercel CLI（v54.9.0、ログインアカウント`togura112233-cell`）で`vercel deploy --prod --yes`を実行しデプロイ成功。プロジェクト名はディレクトリ名`SeimeiHandan`が大文字を含みVercelの命名規則（小文字のみ）に反するため`seimeihandan`で作成。
+  - 本番URL: **https://seimeihandan.vercel.app**
+  - Vercelプロジェクト: `takashi-s-projects7/seimeihandan`
+  - **未実施**: `vercel git connect`によるGitHub連携（push時の自動デプロイ）は、Vercel側で「Failed to connect togura112233-cell/SeimeiHandan to project」エラーとなり未達成。おそらくVercel GitHub Appが`togura112233-cell`アカウントのリポジトリに対してまだ認可されていないことが原因（推測です・未確認）。Vercelダッシュボードから手動でGitHub App連携を承認すれば解消する見込み。現状はCLIでの`vercel deploy --prod`による手動デプロイのみ運用可能な状態。
+- **Step6動作確認結果**（Playwright自動テストで確認、全て正常）:
+  - 五格計算: 正常表示（例：山田太郎 → 天格8画「堅忍」・人格9画「窮乏」・地格18画「鉄石」・外格17画「剛健」・総格26画「変怪」、三才配置・陰陽配列も表示）
+  - 筆順を数えるアニメーション: 正常表示
+  - 新キャラクターの鑑定トーク: 「私」一人称・穏やかな標準語基調の口調で表示を確認。一行詩（色紙）も表示（例：「涙の分だけ　器が深い」）。旧キャラクター名「心之介」「手相詩人」等の文言は本番ページ上に一切残っていないことを確認済み。ただし「筆聖 墨伝」という肩書き・名前そのものはUI上のテキストラベルとしては表示されない（口調・トーンでのみ表現される設計。旧キャラクターも同様の設計だったため今回変更した挙動ではない）
+  - AI鑑定ボタン: DOM上に`#aiBtn`・`#aiResult`ともに0件で存在しないことを確認
+  - クレジット表示: フッターに「筆順データ: KanjiVG（CC BY-SA 3.0, © Ulrich Apel）／ 画数辞書: KANJIDIC2（EDRDG）」と表示されていることを確認
+  - コンソールエラー: pageerror・console共に0件（エラーなし）
+  - 異常系（記号・絵文字・英数字混在の入力）: クラッシュせず「この文字の画数が辞書にありません」という適切なエラーメッセージを表示して落ちないことを確認
