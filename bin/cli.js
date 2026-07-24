@@ -40,7 +40,9 @@ function handleReading(req, res) {
     let child;
     try {
       // stdin は無効化（開いたままだと codex が EOF 待ちでハングする）
-      child = spawn('codex', args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+      // Windows では npm の CLI shim が codex.cmd になるため、明示的に解決する。
+      const codexCommand = process.platform === 'win32' ? 'codex.exe' : 'codex';
+      child = spawn(codexCommand, args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'codex を起動できません（未インストールの可能性）' }));
