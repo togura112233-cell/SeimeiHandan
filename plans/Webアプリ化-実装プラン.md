@@ -141,3 +141,15 @@
   - クレジット表示: フッターに「筆順データ: KanjiVG（CC BY-SA 3.0, © Ulrich Apel）／ 画数辞書: KANJIDIC2（EDRDG）」と表示されていることを確認
   - コンソールエラー: pageerror・console共に0件（エラーなし）
   - 異常系（記号・絵文字・英数字混在の入力）: クラッシュせず「この文字の画数が辞書にありません」という適切なエラーメッセージを表示して落ちないことを確認
+
+**GitHub連携（自動デプロイ）試行の追記（2026-07-25、デジまる君）**
+
+- タカシさんが `https://github.com/apps/vercel/installations/new` から`togura112233-cell`アカウント・`SeimeiHandan`リポジトリへのVercel GitHub Appアクセス許可を完了。その後`vercel git connect --yes`を再実行したが、**依然として同一のエラー**（`POST /v9/projects/{id}/link`が400 Bad Request、CLIメッセージ「Failed to connect togura112233-cell/SeimeiHandan to project.」）で失敗。
+- `mcp__plugin_vercel_vercel__get_project`で確認したところ`"live": false`のままで、この間の`git push`でも新しいデプロイは自動生成されていない（＝連携は未成立のまま）ことを確認。
+- `vercel integration installations`では「No marketplace installations found」（Vercelの「マーケットプレイス統合」とGitHub連携は別物のため、この結果は判断材料にならない）。
+- GitHub側のApp installation状態をAPIで直接確認しようとしたが、`gh api user/installations`は現在のトークン種別（OAuthアクセストークン）では権限不足（403）で参照不可。Vercel REST APIへの直接POSTでエラー詳細bodyを取得しようとした際は、ローカルの認証情報ファイル読み取りがセキュリティフックにブロックされ中止（意図通りの安全策のため回避策は探さず）。
+- **仮説（未検証）**: `https://github.com/apps/vercel/installations/new`から直接GitHub App単体をインストールしただけでは、Vercel側の「アカウント連携」処理までは完了しない可能性がある。VercelのGit連携は通常「Vercelダッシュボード起点でGitHub接続を開始→OAuthでVercelアカウントとGitHub IDを紐付け→App installation」という一連の流れをVercel側のUIで行う設計のため、GitHub側のApp画面だけを単独で操作すると連携が片肺になる可能性がある。
+- **次にタカシさんに試していただきたいこと**（未実施）:
+  1. `https://vercel.com/takashi-s-projects7/seimeihandan/settings/git` を開き、「Connect Git Repository」ボタンからGitHub連携を開始する（既にAppは許可済みのため、リポジトリ選択画面まで進む可能性が高い）
+  2. それでも失敗する場合は `https://vercel.com/account/login-connections`（またはチーム設定内の同等ページ）でVercelアカウント`togura112233-cell`にGitHubアカウントとしての`togura112233-cell`が接続済みか確認する
+- 上記が完了次第、再度`vercel git connect`を実行し、成功したら軽微な変更のpushで自動デプロイ発生を確認する（本タスクは未完了のため保留中）
