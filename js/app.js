@@ -8,7 +8,6 @@
   let current = null; // { result, meta }
   let poemOffset = 0;
   let running = false;
-  let aiText = null; // Codex鑑定文（取得済みならレポートに載せる）
 
   /* ============ 入力 ============ */
   let variantChoices = {}; // 入力された字 → 本人が選んだ字体（例: '高' → '髙'）
@@ -104,8 +103,6 @@
     $('strokeRow').innerHTML = '';
     $('diagram').innerHTML = '';
     $('kakuCards').innerHTML = '';
-    $('aiResult').classList.add('hidden');
-    aiText = null;
 
     try {
       await animateStrokes(result);
@@ -354,8 +351,8 @@
     stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     const meta = { ...current.meta, offset: poemOffset };
-    const talk = window.Shinnosuke.buildTalk(current.result, meta);
-    const poem = window.Shinnosuke.buildPoem(current.result, meta);
+    const talk = window.Bokuden.buildTalk(current.result, meta);
+    const poem = window.Bokuden.buildPoem(current.result, meta);
 
     $('talkName').textContent = `${current.meta.fullName} さんへ`;
     // 落款は相談者の名の一字（あなたのための色紙）
@@ -391,53 +388,7 @@
     document.querySelector('.shikishi-sign').classList.add('on');
   }
 
-  /* ============ 5. AI鑑定（Codex経由） ============ */
-  $('aiBtn').addEventListener('click', () => { runAI().catch(console.error); });
-
-  function summaryText() {
-    const { result } = current;
-    const { kaku } = result;
-    const lines = [];
-    const cs = [...result.sei, ...result.mei]
-      .map((c) => `${c.ch}${c.display !== c.ch ? `(旧字体:${c.display})` : ''}=${c.n}画${c.notes.length ? '（' + c.notes.join('、') + '）' : ''}`);
-    lines.push(`文字と画数: ${cs.join(' / ')}`);
-    for (const key of ['tenkaku', 'jinkaku', 'chikaku', 'gaikaku', 'soukaku']) {
-      const n = kaku[key];
-      const s = window.SUJI[window.Gokaku.reduce81(n)];
-      lines.push(`${window.KAKU_INFO[key].label}: ${n}画「${s.name}」${s.rank} — ${s.text}`);
-    }
-    const ss = window.Gokaku.sansai(kaku);
-    lines.push(`三才配置: 天${ss.ten}・人${ss.jin}・地${ss.chi}（${ss.r1}／${ss.r2}）${ss.rank}`);
-    const iy = window.Gokaku.inyouArray(result.sei, result.mei);
-    lines.push(`陰陽配列: ${iy.arr.join('')} ${iy.rank}`);
-    return lines.join('\n');
-  }
-
-  async function runAI() {
-    if (!current) return;
-    const btn = $('aiBtn');
-    const out = $('aiResult');
-    out.classList.remove('hidden');
-    out.textContent = '筆を執っています……（Codexで鑑定文を生成中。1〜2分かかることがあります）';
-    btn.disabled = true;
-    try {
-      const prompt = window.Shinnosuke.buildAIPrompt(current.result, current.meta, summaryText());
-      const res = await fetch('/api/reading', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await res.json();
-      if (data.text) { out.textContent = data.text; aiText = data.text; }
-      else out.textContent = (data.error || 'AI鑑定を取得できませんでした。') + '\n※ この機能は `node bin/cli.js` で起動したときだけ使えます（Codexサブスク経由）。上のオフライン鑑定はいつでも動きます。';
-    } catch (e) {
-      out.textContent = 'AI鑑定はローカルサーバ経由でのみ利用できます。`node bin/cli.js` で起動してください。（オフライン鑑定はこのまま使えます）';
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  /* ============ 6. A4 PDFレポート ============ */
+  /* ============ 5. A4 PDFレポート ============ */
   ['pdfBtn', 'pdfBtnResult'].forEach((id) => {
     $(id).addEventListener('click', () => { printReport(); });
   });
@@ -487,16 +438,10 @@
 
     // トークと一行詩（色紙をまだ出していなくても同じシードで再現できる）
     const talkMeta = { ...meta, offset: poemOffset };
-    const talk = window.Shinnosuke.buildTalk(result, talkMeta);
-    const poem = window.Shinnosuke.buildPoem(result, talkMeta);
+    const talk = window.Bokuden.buildTalk(result, talkMeta);
+    const poem = window.Bokuden.buildPoem(result, talkMeta);
 
     const talkHtml = talk.split('\n\n').map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
-    const aiHtml = aiText
-      ? `<section class="pr-section pr-break">
-           <h2>AIじっくり鑑定（Codex）</h2>
-           <div class="pr-talk">${aiText.split(/\n{2,}/).map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>
-         </section>`
-      : '';
 
     $('printReport').innerHTML = `
       <header class="pr-header">
@@ -542,8 +487,6 @@
           <span class="pr-sign">${esc(meta.meiChars[0] || '福')}</span>
         </div>
       </section>
-
-      ${aiHtml}
 
       <footer class="pr-footer">
         <p>※ 画数の数え方（旧字体・部首・かな）は流派により異なります。本レポートは熊崎式で広く用いられる基準を採用しています。</p>
