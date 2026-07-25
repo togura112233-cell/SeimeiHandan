@@ -153,3 +153,9 @@
   1. `https://vercel.com/takashi-s-projects7/seimeihandan/settings/git` を開き、「Connect Git Repository」ボタンからGitHub連携を開始する（既にAppは許可済みのため、リポジトリ選択画面まで進む可能性が高い）
   2. それでも失敗する場合は `https://vercel.com/account/login-connections`（またはチーム設定内の同等ページ）でVercelアカウント`togura112233-cell`にGitHubアカウントとしての`togura112233-cell`が接続済みか確認する
 - 上記が完了次第、再度`vercel git connect`を実行し、成功したら軽微な変更のpushで自動デプロイ発生を確認する（本タスクは未完了のため保留中）
+
+**GitHub連携 成功（2026-07-25、デジまる君）**
+
+- タカシさんがGitHub側「Vercel」App設定でRepository accessに`togura112233-cell/SeimeiHandan`を明示的に追加してSave（スクリーンショットで確認済み）→ 再度`vercel git connect --yes`を実行したところ「`togura112233-cell/SeimeiHandan is already connected to your project.`」と表示され、**連携成功を確認**
+- 前回までの`https://github.com/apps/vercel/installations/new`だけでは不十分で、GitHub側「Vercel」Appの設定画面でリポジトリを個別に追加する操作が必要だったことが今回判明（前回の仮説にあった「Vercelダッシュボード起点の再連携」は不要だった）
+- 本追記のコミット・push自体を「軽微な変更によるpush」として使い、自動デプロイの発生を確認する（結果は本文末尾に追記予定）
