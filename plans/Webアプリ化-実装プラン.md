@@ -1,6 +1,6 @@
 # 姓名判断アプリ Webアプリ化 実装プラン
 
-> バージョン: v3 | 作成日: 2026-07-24 | 更新日: 2026-07-25 | ステータス: 完了（Step1〜6すべて完了、本番公開済み）
+> バージョン: v4 | 作成日: 2026-07-24 | 更新日: 2026-07-25 | ステータス: 完了（Step1〜6すべて完了、本番公開済み、GitHub連携によるpush時自動デプロイも確認済み）
 
 ---
 
@@ -104,6 +104,7 @@
 | v1 | 初稿作成 | AI鑑定保留・心之介ペルソナ差し替え・決済なしの3方針をタカシさんに確認済み |
 | v2 | 新キャラクター「筆聖 墨伝」を確定・Step1完了・タカシさんGO受領 | 実装フェーズへ移行 |
 | v3 | Step5でGitHubリポジトリを`Getabako/SeimeiHandan`から`togura112233-cell/SeimeiHandan`に変更・Step5〜6完了 | `Getabako/SeimeiHandan`へのpush権限がないことが判明したため、タカシさん確認の上、push権限のある`togura112233-cell`アカウント配下に新規リポジトリを作成する方針に変更 |
+| v4 | Vercel↔GitHub連携（push時自動デプロイ）を確立 | GitHub側「Vercel」App設定でリポジトリアクセスを個別許可する必要があったことが判明。`vercel git connect`成功後、実際のpushで自動デプロイ発生を確認 |
 
 ---
 
@@ -159,3 +160,4 @@
 - タカシさんがGitHub側「Vercel」App設定でRepository accessに`togura112233-cell/SeimeiHandan`を明示的に追加してSave（スクリーンショットで確認済み）→ 再度`vercel git connect --yes`を実行したところ「`togura112233-cell/SeimeiHandan is already connected to your project.`」と表示され、**連携成功を確認**
 - 前回までの`https://github.com/apps/vercel/installations/new`だけでは不十分で、GitHub側「Vercel」Appの設定画面でリポジトリを個別に追加する操作が必要だったことが今回判明（前回の仮説にあった「Vercelダッシュボード起点の再連携」は不要だった）
 - 本追記のコミット・push自体を「軽微な変更によるpush」として使い、自動デプロイの発生を確認する（結果は本文末尾に追記予定）
+- **自動デプロイ確認結果**: 上記コミット（`bdec645`）を`vercel-origin`へpush後、`mcp__plugin_vercel_vercel__list_deployments`で新規デプロイ`dpl_AmbSzQaYExrMJCYapxsDrry9VDdV`（state: READY, target: production）が自動生成されたことを確認。デプロイのメタ情報に`githubCommitSha: bdec64578bb9bb0fe63eefbacd98e655132b807d`・`githubCommitRepo: SeimeiHandan`・`githubOrg: togura112233-cell`が記録されており、GitHub push起点の自動デプロイであることが裏付けられた。**GitHub連携・push時自動デプロイ、確認完了**。
